@@ -60,9 +60,10 @@ function openid_connect_admin_form($form, &$form_state) {
     '#type' => 'fieldset',
   );
 
-  $user_entity_wrapper = entity_metadata_wrapper('user');
+  // @TODO: Ain't no such thing in D5!
+  // $user_entity_wrapper = entity_metadata_wrapper('user');
   $claims = openid_connect_claims_options();
-  $properties = $user_entity_wrapper->getPropertyInfo();
+  //  $properties = $user_entity_wrapper->getPropertyInfo();
   $properties_skip = _openid_connect_user_properties_to_skip();
   foreach ($properties as $property_name => $property) {
     if (isset($properties_skip[$property_name])) {

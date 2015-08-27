@@ -134,8 +134,9 @@ function openid_connect_get_client($client_name) {
  *   An array with information about the requested operation type plugin.
  */
 function openid_connect_get_plugin($client_name) {
-  ctools_include('plugins');
-  return ctools_get_plugins('openid_connect', 'openid_connect_client', $client_name);
+  // TODO: Figure out non-ctools way to do this.
+  // ctools_include('plugins');
+  // return ctools_get_plugins('openid_connect', 'openid_connect_client', $client_name);
 }
 
 /**
@@ -145,8 +146,9 @@ function openid_connect_get_plugin($client_name) {
  *   Whether to return only the plugins enabled by the administrator.
  */
 function openid_connect_get_plugins($enabled_only = FALSE) {
-  ctools_include('plugins');
-  $plugins = ctools_get_plugins('openid_connect', 'openid_connect_client');
+  // ctools_include('plugins');
+  // $plugins = ctools_get_plugins('openid_connect', 'openid_connect_client');
+  // TODO: Figure out non ctools method to load plugins.
   $plugins_enabled = variable_get('openid_connect_clients_enabled', array());
   foreach ($plugins as $key => $plugin) {
     if (!class_exists($plugin['class']) || ($enabled_only && empty($plugins_enabled[$plugin['name']]))) {
@@ -156,7 +158,8 @@ function openid_connect_get_plugins($enabled_only = FALSE) {
       continue;
     }
   }
-  uasort($plugins, 'ctools_plugin_sort');
+  // TODO: Find a different way to sort.
+  // uasort($plugins, 'ctools_plugin_sort');
   return $plugins;
 }
 
@@ -593,7 +596,8 @@ function openid_connect_claims() {
       'scope' => 'phone',
     ),
   );
-  drupal_alter(__FUNCTION__, $claims);
+  // TODO: Fix this.
+  //  drupal_alter(__FUNCTION__, $claims);
   return $claims;
 }
 
@@ -791,7 +795,8 @@ function openid_connect_extract_sub($user_data, $userinfo) {
  */
 function openid_connect_complete_authorization($client, $tokens, &$destination) {
   if (user_is_logged_in()) {
-    throw new \RuntimeException('User already logged in');
+    // @FIXME: This isn't valid in PHP 5.2.
+    // throw new \RuntimeException('User already logged in');
   }
 
   $user_data = $client->decodeIdToken($tokens['id_token']);
@@ -851,7 +856,8 @@ function openid_connect_complete_authorization($client, $tokens, &$destination) 
 function openid_connect_connect_current_user($client, $tokens) {
   global $user;
   if (!$user->uid) {
-    throw new \RuntimeException('User not logged in');
+    // @FIXME: This isn't valid in PHP 5.2.
+    // throw new \RuntimeException('User not logged in');
   }
 
   $user_data = $client->decodeIdToken($tokens['id_token']);
