@@ -30,7 +30,8 @@ function openid_connect_menu($may_cache) {
     // TODO: Move openid_connect_redirect_access() into
     // openid_connect_redirect_page().
     include_once 'includes/openid_connect.pages.inc';
-    $items[OPENID_CONNECT_REDIRECT_PATH_BASE . '/%'] = array(
+    $items[] = array(
+      'path' => OPENID_CONNECT_REDIRECT_PATH_BASE . '/%',
       'title' => 'OpenID Connect redirect page',
       'callback' => 'openid_connect_redirect_page',
       'callback arguments' => array(1),
@@ -39,15 +40,29 @@ function openid_connect_menu($may_cache) {
   }
 
   if (!$may_cache) {
+
     include_once 'includes/openid_connect.forms.inc';
     // TODO: Move openid_connect_connected_accounts_access() into callback.
-    $items['user/%user/connected-accounts'] = array(
-      'title' => 'Connected accounts',
-      'callback' => 'drupal_get_form',
-      'callback arguments' => array('openid_connect_connect_form', 1),
-      'type' => MENU_LOCAL_TASK,
-      'weight' => 5,
-    );
+    if (arg(0) == 'user' && arg(1) > 0) {
+      global $user;
+      $account = user_load(array('uid' => arg(1)));
+
+      if ($user !== FALSE) {
+        $view_access |= $user->uid == arg(1);
+        // Only admins can view blocked accounts.
+        $view_access &= $account->status || $admin_access;
+
+        $items[] = array(
+          'path' => 'user/' . arg(1) . '/connected-accounts',
+          'title' => 'Connected accounts',
+          'callback' => 'drupal_get_form',
+          'access' => $admin_access || $user->uid == arg(1),
+          'callback arguments' => array('openid_connect_connect_form', 1),
+          'type' => MENU_LOCAL_TASK,
+          'weight' => 5,
+        );
+      }
+    }
   }
 
   return $items;
