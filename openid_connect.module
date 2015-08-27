@@ -15,37 +15,40 @@ define('OPENID_CONNECT_REDIRECT_PATH_BASE', 'openid-connect');
  */
 function openid_connect_menu($may_cache) {
 
-  // TODO: implement $may_cache.
-  include_once 'includes/openid_connect.admin.inc';
-  $items = array();
-  $items[] = array(
-    'path' => 'admin/settings/openid-connect',
-    'title' => 'OpenID Connect',
-    'description' => 'Config OpenID Connect, choose active OpenID Connect clients etc.',
-    'callback' => 'drupal_get_form',
-    'callback arguments' => array('openid_connect_admin_form'),
-    'access' => user_access('configure openid connect clients'),
-  );
+  if ($may_cache) {
+    include_once 'includes/openid_connect.admin.inc';
+    $items = array();
+    $items[] = array(
+      'path' => 'admin/settings/openid-connect',
+      'title' => 'OpenID Connect',
+      'description' => 'Config OpenID Connect, choose active OpenID Connect clients etc.',
+      'callback' => 'drupal_get_form',
+      'callback arguments' => array('openid_connect_admin_form'),
+      'access' => user_access('configure openid connect clients'),
+    );
 
-  // TODO: Move openid_connect_redirect_access() into
-  // openid_connect_redirect_page().
-  include_once 'includes/openid_connect.pages.inc';
-  $items[OPENID_CONNECT_REDIRECT_PATH_BASE . '/%'] = array(
-    'title' => 'OpenID Connect redirect page',
-    'callback' => 'openid_connect_redirect_page',
-    'callback arguments' => array(1),
-    'type' => MENU_CALLBACK,
-  );
+    // TODO: Move openid_connect_redirect_access() into
+    // openid_connect_redirect_page().
+    include_once 'includes/openid_connect.pages.inc';
+    $items[OPENID_CONNECT_REDIRECT_PATH_BASE . '/%'] = array(
+      'title' => 'OpenID Connect redirect page',
+      'callback' => 'openid_connect_redirect_page',
+      'callback arguments' => array(1),
+      'type' => MENU_CALLBACK,
+    );
+  }
 
-  include_once 'includes/openid_connect.forms.inc';
-  // TODO: Move openid_connect_connected_accounts_access() into callback.
-  $items['user/%user/connected-accounts'] = array(
-    'title' => 'Connected accounts',
-    'callback' => 'drupal_get_form',
-    'callback arguments' => array('openid_connect_connect_form', 1),
-    'type' => MENU_LOCAL_TASK,
-    'weight' => 5,
-  );
+  if (!$may_cache) {
+    include_once 'includes/openid_connect.forms.inc';
+    // TODO: Move openid_connect_connected_accounts_access() into callback.
+    $items['user/%user/connected-accounts'] = array(
+      'title' => 'Connected accounts',
+      'callback' => 'drupal_get_form',
+      'callback arguments' => array('openid_connect_connect_form', 1),
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 5,
+    );
+  }
 
   return $items;
 }
