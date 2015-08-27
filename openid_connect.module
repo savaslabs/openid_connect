@@ -13,33 +13,38 @@ define('OPENID_CONNECT_REDIRECT_PATH_BASE', 'openid-connect');
 /**
  * Implements hook_menu().
  */
-function openid_connect_menu() {
+function openid_connect_menu($may_cache) {
+
+  // TODO: implement $may_cache.
+  include_once 'includes/openid_connect.admin.inc';
   $items = array();
-  $items['admin/config/services/openid-connect'] = array(
+  $items[] = array(
+    'path' => 'admin/settings/openid-connect',
     'title' => 'OpenID Connect',
     'description' => 'Config OpenID Connect, choose active OpenID Connect clients etc.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('openid_connect_admin_form'),
-    'access arguments' => array('configure openid connect clients'),
-    'file' => 'includes/openid_connect.admin.inc',
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('openid_connect_admin_form'),
+    'access' => user_access('configure openid connect clients'),
   );
+
+  // TODO: Move openid_connect_redirect_access() into
+  // openid_connect_redirect_page().
+  include_once 'includes/openid_connect.pages.inc';
   $items[OPENID_CONNECT_REDIRECT_PATH_BASE . '/%'] = array(
     'title' => 'OpenID Connect redirect page',
-    'page callback' => 'openid_connect_redirect_page',
-    'page arguments' => array(1),
-    'access callback' => 'openid_connect_redirect_access',
+    'callback' => 'openid_connect_redirect_page',
+    'callback arguments' => array(1),
     'type' => MENU_CALLBACK,
-    'file' => 'includes/openid_connect.pages.inc'
   );
+
+  include_once 'includes/openid_connect.forms.inc';
+  // TODO: Move openid_connect_connected_accounts_access() into callback.
   $items['user/%user/connected-accounts'] = array(
     'title' => 'Connected accounts',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('openid_connect_connect_form', 1),
-    'access callback' => 'openid_connect_connected_accounts_access',
-    'access arguments' => array(1),
+    'callback' => 'drupal_get_form',
+    'callback arguments' => array('openid_connect_connect_form', 1),
     'type' => MENU_LOCAL_TASK,
     'weight' => 5,
-    'file' => 'includes/openid_connect.forms.inc'
   );
 
   return $items;
