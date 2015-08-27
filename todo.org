@@ -1,0 +1,12 @@
+* Open ID Drupal 5 port tasks
+
+Here's a list of things that need to get done.
+** TODO Remove dependency on ctools
+** TODO Convert permission hook
+** TODO Convert .install file
+** TODO Convert hook_menu
+** TODO Remove dependency on entity module
+** TODO Figure out what User Claims Mapping is all about
+** TODO User profile photo saving with user account
+** TODO Block implementation for auth
+
