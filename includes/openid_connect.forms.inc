@@ -8,8 +8,9 @@
 /**
  * Form builder: Log in with an external account.
  */
-function openid_connect_login_form($form, &$form_state) {
-  form_load_include($form_state, 'inc', 'openid_connect', 'includes/openid_connect.forms');
+function openid_connect_login_form() {
+  $form = array();
+  include_once './' . drupal_get_path('module', 'openid_connect') . '/includes/openid_connect.forms.inc';
 
   foreach (openid_connect_get_plugins(TRUE) as $client) {
     $form['openid_connect_client_' . $client['name'] . '_login'] = array(
