@@ -184,8 +184,8 @@ function openid_connect_get_plugins($enabled_only = FALSE) {
     // with Ctools'ish code.
     $plugin['name'] = $key;
     $path = drupal_get_path('module', $plugin['module']);
-    $include_path = realpath('.') . '/' . $path . '/plugins/openid_connect_client/' . $key . '/' . $plugin['file'];
-    if (!file_exists($include_path)) {
+    $plugin_include_path = realpath('.') . '/' . $path . '/plugins/openid_connect_client/' . $key . '/' . $plugin['file'];
+    if (!file_exists($plugin_include_path)) {
       // Check to see if plugin file path is defined correctly.
       unset($plugins[$key]);
       continue;
@@ -193,7 +193,7 @@ function openid_connect_get_plugins($enabled_only = FALSE) {
 
     include_once realpath('.') . '/' . drupal_get_path('module', 'openid_connect') . '/includes/OpenIDConnectClientInterface.class.php';
     include_once realpath('.') . '/' . drupal_get_path('module', 'openid_connect') . '/includes/OpenIDConnectClientBase.class.php';
-    include_once $include_path;
+    include_once $plugin_include_path;
 
     if (!class_exists($plugin['class']) || ($enabled_only && empty($plugins_enabled[$plugin['name']]))) {
       // Invalid class specified or client is not enabled and we only suppose to
