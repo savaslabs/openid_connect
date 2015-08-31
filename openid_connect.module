@@ -177,8 +177,12 @@ function openid_connect_get_plugin($client_name) {
 function openid_connect_get_plugins($enabled_only = FALSE) {
 
   $plugins = module_invoke_all('openid_connect_plugins');
-    $plugins_enabled = variable_get('openid_connect_clients_enabled', array());
-  foreach ($plugins as $key => $plugin) {
+  $plugins_enabled = variable_get('openid_connect_clients_enabled', array());
+
+  foreach ($plugins as $key => &$plugin) {
+    // Add the plugin 'title' as 'name' on the array for compatability
+    // with Ctools'ish code.
+    $plugin['name'] = $key;
     $path = drupal_get_path('module', $plugin['module']);
     $include_path = realpath('.') . '/' . $path . '/plugins/openid_connect_client/' . $key . '/' . $plugin['file'];
     if (!file_exists($include_path)) {
@@ -197,8 +201,7 @@ function openid_connect_get_plugins($enabled_only = FALSE) {
       unset($plugins[$key]);
       continue;
     }
-    // Add the plugin 'title' as 'name' on the array for compatability with Ctools'ish code.
-    $plugins[$key]['name'] = $key;
+
   }
   return $plugins;
 }
