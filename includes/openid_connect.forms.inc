@@ -40,7 +40,7 @@ function openid_connect_login_form_submit(&$form, &$form_state) {
  * Form builder: Connect an external account to your existing Drupal account.
  */
 function openid_connect_connect_form($form, &$form_state, $account) {
-  form_load_include($form_state, 'inc', 'openid_connect', 'includes/openid_connect.forms');
+  include_once './' . drupal_get_path('module', 'openid_connect') . '/includes/openid_connect.forms.inc';
 
   $form_state['account'] = $account;
 
