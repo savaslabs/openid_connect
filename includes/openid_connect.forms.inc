@@ -77,9 +77,10 @@ function openid_connect_connect_form($form, &$form_state, $account) {
       '#markup' => t('Not connected'),
     );
     if ($connected) {
-      $fieldset['status']['#markup'] = t('Connected as %sub', array(
-        '%sub' => $connected_accounts[$client['name']],
-      ));
+      $fieldset['status']['#markup'] = t('Connected as %sub',
+                                       array(
+                                         '%sub' => $connected_accounts[$client['name']],
+                                       ));
       $fieldset['openid_connect_client_' . $client['name'] . '_disconnect'] = array(
         '#type' => 'submit',
         '#value' => t('Disconnect from !client_title', array('!client_title' => $client['title'])),
