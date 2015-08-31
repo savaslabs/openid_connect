@@ -743,13 +743,13 @@ function openid_connect_entity_property_info_alter(&$info) {
  *   An array of 'sub' properties keyed by the client name.
  */
 function openid_connect_get_connected_accounts($account) {
+
   $auth_maps = db_query(
-    "SELECT module, authname FROM {authmap} WHERE uid = :uid AND module LIKE 'openid_connect_%'",
-    array(':uid' => $account->uid)
+    "SELECT module, authname FROM {authmap} WHERE uid = %d AND module LIKE 'openid_connect_%'", $account->uid
   );
   $module_offset = strlen('openid_connect_');
   $results = array();
-  foreach ($auth_maps as $auth_map) {
+  while($auth_map = db_fetch_object($auth_maps)) {
     $client = substr($auth_map->module, $module_offset);
     $sub = $auth_map->authname;
     $results[$client] = $sub;
