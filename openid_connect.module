@@ -305,16 +305,28 @@ function openid_connect_connected_accounts_access() {
  * Saves user profile information into a user account.
  */
 function openid_connect_save_userinfo($account, $userinfo) {
-//  $account_wrapper = entity_metadata_wrapper('user', $account);
-//  $properties = $account_wrapper->getPropertyInfo();
-  $properties_skip = _openid_connect_user_properties_to_skip();
-  foreach ($properties as $property_name => $property) {
-    if (isset($properties_skip[$property_name])) {
-      continue;
+  $edit = array();
+  if (module_exists('profile')) {
+    $properties = array();
+    $profile_categories = profile_categories();
+    // We don't have niceties like $account_wrapper->getPropertyInfo(), so use
+    // profile module's categories instead.
+    foreach ($profile_categories as $category) {
+      $profile_get_fields = _profile_get_fields($category['name']);
+      while ($field = db_fetch_object(($profile_get_fields))) {
+        $properties[$field->name] = $field;
+      }
     }
-    $claim = variable_get('openid_connect_userinfo_mapping_property_' . $property_name, NULL);
-    if ($claim && isset($userinfo[$claim])) {
-      $account_wrapper->{$property_name} = $userinfo[$claim];
+
+    $properties_skip = _openid_connect_user_properties_to_skip();
+    foreach ($properties as $property_name => $property) {
+      if (isset($properties_skip[$property_name])) {
+        continue;
+      }
+      $claim = variable_get('openid_connect_userinfo_mapping_property_' . $property_name, NULL);
+      if ($claim && isset($userinfo[$claim])) {
+        $edit[$property_name] = $userinfo[$claim];
+      }
     }
   }
 
@@ -324,7 +336,7 @@ function openid_connect_save_userinfo($account, $userinfo) {
     $account->data['oidc_name'] = $userinfo['name'];
   }
 
-//  $account_wrapper->save();
+  user_save($account, $edit);
 
   // Fetch and save user picture from the login provider.
   if (variable_get('user_pictures', FALSE) && variable_get('openid_connect_user_pictures', TRUE) && !empty($userinfo['picture'])) {
@@ -341,14 +353,14 @@ function openid_connect_save_userinfo($account, $userinfo) {
  *   The URL to a user picture.
  */
 function openid_connect_save_user_picture($account, $picture_url) {
-//  $picture_directory = file_default_scheme() . '://' . variable_get('user_picture_path', 'pictures');
-//  if (!file_prepare_directory($picture_directory, FILE_CREATE_DIRECTORY)) {
-//    return;
-//  }
+  $picture_directory = 'files/' . variable_get('user_picture_path', 'pictures');
+  if (!file_check_directory($picture_directory, FILE_CREATE_DIRECTORY)) {
+    return;
+  }
 
   $response = drupal_http_request($picture_url);
   if ($response->code != 200) {
-    watchdog('openid_connect', 'The user picture could not be fetched from URL: @url', array('@url' => $picture_url));
+    watchdog('openid_connect', t('The user picture could not be fetched from URL: @url', array('@url' => $picture_url)), WATCHDOG_WARNING);
     return;
   }
 
@@ -358,13 +370,18 @@ function openid_connect_save_user_picture($account, $picture_url) {
     return;
   }
 
-//  $picture_path = file_stream_wrapper_uri_normalize($picture_directory . '/picture-' . $account->uid . '-' . REQUEST_TIME . '.jpg');
-  $picture_file = file_save_data($response->data, $picture_path, FILE_EXISTS_REPLACE);
+  $picture_suffix = substr($response->headers['Content-Type'], strpos($response->headers['Content-Type'], '/') + 1);
+  $picture_path = $picture_directory . '/picture-' . $account->uid . '-' . $_SERVER['REQUEST_TIME'] . '.' . $picture_suffix;
+  $file = file_save_upload(file_get_contents($picture_url), $picture_path, 1);
+  if (!$file) {
+    return;
+  }
 
   // Check to make sure the picture isn't too large for the site settings.
   // Suppress the status message that Drupal sets after a successful resizing.
   $status_messages = isset($_SESSION['messages']['status']) ? $_SESSION['messages']['status'] : NULL;
-//  file_validate_image_resolution($picture_file, variable_get('user_picture_dimensions', '1024x1024'));
+  //  file_validate_image_resolution($picture_file, variable_get('user_picture_dimensions', '1024x1024'));
+//  user_validate_picture($picture_file, $edit, $account);
   if (isset($status_messages)) {
     $_SESSION['messages']['status'] = $status_messages;
   }
@@ -373,9 +390,11 @@ function openid_connect_save_user_picture($account, $picture_url) {
   }
 
   // Update the user account object.
-  $account->picture = $picture_file;
-  $account->data['oidc_picture_hash'] = $hash;
-  user_save($account);
+  $edit['picture'] = $file->filepath;
+//  $edit['data']['oidc_picture_hash'] = $hash;
+  $account->picture_delete = 1;
+  $account->picture_upload = NULL;
+  user_save($account, $edit);
 }
 
 /**
@@ -503,7 +522,7 @@ function openid_connect_username_exists($name) {
  * Implements hook_user().
  */
 function openid_connect_user($op, &$edit, &$account, $category = NULL) {
-  switch {
+  switch ($op) {
     case 'delete':
       openid_connect_authmap_delete($account->uid);
       break;
