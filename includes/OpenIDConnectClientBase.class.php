@@ -99,18 +99,18 @@ abstract class OpenIDConnectClientBase implements OpenIDConnectClientInterface {
   public function authorize($scope = 'openid email') {
     $redirect_uri = OPENID_CONNECT_REDIRECT_PATH_BASE . '/' . $this->name;
     $url_options = array(
-      'query' => array(
-        'client_id' => $this->getSetting('client_id'),
-        'response_type' => 'code',
-        'scope' => $scope,
-        'redirect_uri' => url($redirect_uri, array('absolute' => TRUE)),
-        'state' => openid_connect_create_state_token(),
-      ),
+      'client_id' => $this->getSetting('client_id'),
+      'response_type' => 'code',
+      'scope' => $scope,
+      'redirect_uri' => url($redirect_uri, NULL, NULL, TRUE),
+      'state' => openid_connect_create_state_token(),
     );
+
     $endpoints = $this->getEndpoints();
     // Clear $_GET['destination'] because we need to override it.
     unset($_GET['destination']);
-    drupal_goto($endpoints['authorization'], $url_options);
+    $query = drupal_query_string_encode($url_options);
+    drupal_goto($endpoints['authorization'], $query);
   }
 
   /**
