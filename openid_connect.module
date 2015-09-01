@@ -132,15 +132,13 @@ function &_openid_connect_drupal_static($name, $default_value = NULL, $reset = F
  */
 function openid_connect_get_client($client_name) {
   $clients = &_openid_connect_drupal_static(__FUNCTION__);
-    if (!isset($clients[$client_name])) {
+  if (!isset($clients[$client_name])) {
     $plugin = openid_connect_get_plugin($client_name);
 
     if ($plugin) {
-      $plugin_include_path = realpath('.') . '/' . drupal_get_path('module', 'openid_connect') . '/plugins/openid_connect_client/' . $client_name . '/' . $plugin['file'];
-      include_once realpath('.') . '/' . drupal_get_path('module', 'openid_connect') . '/includes/OpenIDConnectClientInterface.class.php';
-      include_once realpath('.') . '/' . drupal_get_path('module', 'openid_connect') . '/includes/OpenIDConnectClientBase.class.php';
-      include_once $plugin_include_path;
 
+      $plugin_include_path = _openid_connect_get_plugin_include_path($plugin['module'], $client_name, $plugin['file']);
+      _openid_connect_include_classes($plugin_include_path);
       $settings = variable_get('openid_connect_client_' . $client_name, array());
       $clients[$client_name] = new $plugin['class']($client_name, $plugin['title'], $settings);
     }
@@ -181,17 +179,15 @@ function openid_connect_get_plugins($enabled_only = FALSE) {
     // Add the plugin 'title' as 'name' on the array for compatability
     // with Ctools'ish code.
     $plugin['name'] = $key;
-    $path = drupal_get_path('module', $plugin['module']);
-    $plugin_include_path = realpath('.') . '/' . $path . '/plugins/openid_connect_client/' . $key . '/' . $plugin['file'];
+
+    $plugin_include_path = _openid_connect_get_plugin_include_path($plugin['module'], $key, $plugin['file']);
     if (!file_exists($plugin_include_path)) {
       // Check to see if plugin file path is defined correctly.
       unset($plugins[$key]);
       continue;
     }
 
-    include_once realpath('.') . '/' . drupal_get_path('module', 'openid_connect') . '/includes/OpenIDConnectClientInterface.class.php';
-    include_once realpath('.') . '/' . drupal_get_path('module', 'openid_connect') . '/includes/OpenIDConnectClientBase.class.php';
-    include_once $plugin_include_path;
+    _openid_connect_include_classes($plugin_include_path);
 
     if (!class_exists($plugin['class']) || ($enabled_only && empty($plugins_enabled[$plugin['name']]))) {
       // Invalid class specified or client is not enabled and we only suppose to
@@ -204,9 +200,37 @@ function openid_connect_get_plugins($enabled_only = FALSE) {
   return $plugins;
 }
 
-function _openid_connect_include_classes($plugin_name) {
+/**
+ * Get a plugin class path for use with include_once().
+ *
+ * @param string $plugin_module
+ *   The plugin module provider's name, e.g. 'openid_connect' for this module.
+ * @param string $plugin_name
+ *   The plugin name, e.g. 'google'.
+ * @param string $plugin_file
+ *   The plugin file name, e.g. 'OpenIDConnectClientGoogle.class.php`.
+ *
+ * @return string
+ *   A string containing the full path on the file system to a plugin class.
+ */
+function _openid_connect_get_plugin_include_path($plugin_module, $plugin_name, $plugin_file) {
+  return realpath('.') . '/' . drupal_get_path('module', $plugin_module) . '/plugins/openid_connect_client/' . $plugin_name . '/' . $plugin_file;
+}
+
+
+/**
+ * Helper function to load OpenIDConnectClient classes and plugin class.
+ *
+ * @param string $plugin_include_path
+ *   The full path to a plugin class file. Use
+ *   _openid_connect_get_plugin_include_path() for this parameter.
+ */
+function _openid_connect_include_classes($plugin_include_path = NULL) {
   include_once realpath('.') . '/' . drupal_get_path('module', 'openid_connect') . '/includes/OpenIDConnectClientInterface.class.php';
   include_once realpath('.') . '/' . drupal_get_path('module', 'openid_connect') . '/includes/OpenIDConnectClientBase.class.php';
+  if ($plugin_include_path) {
+    include_once $plugin_include_path;
+  }
 }
 
 /**
