@@ -500,22 +500,18 @@ function openid_connect_username_exists($name) {
 }
 
 /**
- * Implements hook_username_alter().
+ * Implements hook_user().
  */
-function openid_connect_username_alter(&$name, $account) {
-  // Ensure that usernames are not displayed if they are email addresses, or if
-  // they are generated names starting with 'oidc_'.
-  if (!empty($account->data['oidc_name']) && (strpos($name, 'oidc_') === 0 || strpos($name, '@'))) {
-    $name = $account->data['oidc_name'];
-  }
-}
-
-/**
- * Implements hook_user_insert().
- */
-function openid_connect_user_insert(&$edit, $account, $category) {
-  if (isset($edit['openid_connect_client'])) {
-    openid_connect_connect_account($account, $edit['openid_connect_client'], $edit['openid_connect_sub']);
+function openid_connect_user($op, &$edit, &$account, $category = NULL) {
+  switch {
+    case 'delete':
+      openid_connect_authmap_delete($account->uid);
+      break;
+    case 'insert':
+      if (isset($edit['openid_connect_client'])) {
+        openid_connect_connect_account($account, $edit['openid_connect_client'], $edit['openid_connect_sub']);
+      }
+      break;
   }
 }
 
@@ -527,21 +523,9 @@ function openid_connect_authmap_delete($uid) {
 }
 
 /**
- * Implements hook_user_delete().
- */
-function openid_connect_user_delete($account) {
-  openid_connect_authmap_delete($account->uid);
-}
-
-/**
- * Implements hook_user_cancel().
- */
-function openid_connect_user_cancel($edit, $account, $method) {
-  openid_connect_authmap_delete($account->uid);
-}
-
-/**
  * Implements hook_form_FORM_ID_alter().
+ *
+ * TODO: Needs port.
  */
 function openid_connect_form_user_profile_form_alter(&$form, &$form_state) {
   if (isset($form['account'])) {
@@ -559,14 +543,14 @@ function openid_connect_form_user_profile_form_alter(&$form, &$form_state) {
 }
 
 /**
- * Find whether the user is allowed to change their own password.
- *
- * @param object $account
- *   A user account object.
- *
- * @return bool
- *   TRUE if access is granted, FALSE otherwise.
- */
+  * Find whether the user is allowed to change their own password.
+  *
+  * @param object $account
+  *   A user account object.
+  *
+  * @return bool
+  *   TRUE if access is granted, FALSE otherwise.
+    */
 function openid_connect_set_password_access($account) {
   if (user_access('openid_connect set own password', $account)) {
     return TRUE;
