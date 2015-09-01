@@ -63,6 +63,11 @@ function openid_connect_perm() {
 
 /**
  * Implementation of hook_openid_connect_plugins().
+ *
+ * The Drupal 7 version of this module uses the Ctools plugin system for
+ * registering plugins. Since Ctools isn't available on Drupal 5, we use
+ * Drupal's hook system for registering plugins. The format is more
+ * verbose than Ctools but works.
  */
 function openid_connect_openid_connect_plugins() {
   return array(
