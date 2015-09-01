@@ -26,21 +26,22 @@ function openid_connect_menu($may_cache) {
       'callback arguments' => array('openid_connect_admin_form'),
       'access' => user_access('configure openid connect clients'),
     );
-
-    // TODO: Move openid_connect_redirect_access() into
-    // openid_connect_redirect_page().
-    include_once drupal_get_path('module', 'openid_connect') . '/includes/openid_connect.pages.inc';
-    $items[] = array(
-      'path' => OPENID_CONNECT_REDIRECT_PATH_BASE . '/%',
-      'title' => 'OpenID Connect redirect page',
-      'callback' => 'openid_connect_redirect_page',
-      'callback arguments' => array(1),
-      'type' => MENU_CALLBACK,
-    );
   }
 
   if (!$may_cache) {
-    include_once drupal_get_path('module', 'openid_connect') . '/includes/openid_connect.forms.inc';
+    // TODO: Move openid_connect_redirect_access() into
+    // openid_connect_redirect_page().
+    include_once realpath('.') . '/' . drupal_get_path('module', 'openid_connect') . '/includes/openid_connect.pages.inc';
+    $items[] = array(
+      'path' => OPENID_CONNECT_REDIRECT_PATH_BASE . '/' . arg(1),
+      'title' => 'OpenID Connect redirect page',
+      'callback' => 'openid_connect_redirect_page',
+      'callback arguments' => array(arg(1)),
+      'access' => openid_connect_redirect_access(),
+      'type' => MENU_CALLBACK,
+    );
+
+    include_once realpath('.') . '/' . drupal_get_path('module', 'openid_connect') . '/includes/openid_connect.forms.inc';
     // TODO: Move openid_connect_connected_accounts_access() into callback.
     if (arg(0) == 'user' && arg(1) > 0) {
       global $user;
@@ -139,10 +140,15 @@ function &_openid_connect_drupal_static($name, $default_value = NULL, $reset = F
  */
 function openid_connect_get_client($client_name) {
   $clients = &_openid_connect_drupal_static(__FUNCTION__);
-  if (!isset($clients[$client_name])) {
+    if (!isset($clients[$client_name])) {
     $plugin = openid_connect_get_plugin($client_name);
 
     if ($plugin) {
+      $plugin_include_path = realpath('.') . '/' . drupal_get_path('module', 'openid_connect') . '/plugins/openid_connect_client/' . $client_name . '/' . $plugin['file'];
+      include_once realpath('.') . '/' . drupal_get_path('module', 'openid_connect') . '/includes/OpenIDConnectClientInterface.class.php';
+      include_once realpath('.') . '/' . drupal_get_path('module', 'openid_connect') . '/includes/OpenIDConnectClientBase.class.php';
+      include_once $plugin_include_path;
+
       $settings = variable_get('openid_connect_client_' . $client_name, array());
       $clients[$client_name] = new $plugin['class']($client_name, $plugin['title'], $settings);
     }
@@ -204,6 +210,11 @@ function openid_connect_get_plugins($enabled_only = FALSE) {
 
   }
   return $plugins;
+}
+
+function _openid_connect_include_classes($plugin_name) {
+  include_once realpath('.') . '/' . drupal_get_path('module', 'openid_connect') . '/includes/OpenIDConnectClientInterface.class.php';
+  include_once realpath('.') . '/' . drupal_get_path('module', 'openid_connect') . '/includes/OpenIDConnectClientBase.class.php';
 }
 
 /**
