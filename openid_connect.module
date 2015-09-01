@@ -14,10 +14,8 @@ define('OPENID_CONNECT_REDIRECT_PATH_BASE', 'openid-connect');
  * Implements hook_menu().
  */
 function openid_connect_menu($may_cache) {
-
+  $items = array();
   if ($may_cache) {
-
-    $items = array();
     $items[] = array(
       'path' => 'admin/settings/openid-connect',
       'title' => 'OpenID Connect',
@@ -29,8 +27,6 @@ function openid_connect_menu($may_cache) {
   }
 
   if (!$may_cache) {
-    // TODO: Move openid_connect_redirect_access() into
-    // openid_connect_redirect_page().
     include_once realpath('.') . '/' . drupal_get_path('module', 'openid_connect') . '/includes/openid_connect.pages.inc';
     $items[] = array(
       'path' => OPENID_CONNECT_REDIRECT_PATH_BASE . '/' . arg(1),
@@ -42,22 +38,15 @@ function openid_connect_menu($may_cache) {
     );
 
     include_once realpath('.') . '/' . drupal_get_path('module', 'openid_connect') . '/includes/openid_connect.forms.inc';
-    // TODO: Move openid_connect_connected_accounts_access() into callback.
-    if (arg(0) == 'user' && arg(1) > 0) {
-      global $user;
-      if ($user !== FALSE) {
-
-        $items[] = array(
-          'path' => 'user/' . arg(1) . '/connected-accounts',
-          'title' => 'Connected accounts',
-          'callback' => 'drupal_get_form',
-          'access' => user_access('administer users') || $user->uid == arg(1),
-          'callback arguments' => array('openid_connect_connect_form', 1),
-          'type' => MENU_LOCAL_TASK,
-          'weight' => 5,
-        );
-      }
-    }
+    $items[] = array(
+      'path' => 'user/' . arg(1) . '/connected-accounts',
+      'title' => 'Connected accounts',
+      'callback' => 'drupal_get_form',
+      'access' => openid_connect_connected_accounts_access(),
+      'callback arguments' => array('openid_connect_connect_form', 1),
+      'type' => MENU_LOCAL_TASK,
+      'weight' => 5,
+    );
   }
 
   return $items;
@@ -276,21 +265,21 @@ function openid_connect_redirect_access() {
 /**
  * Access callback: Connected accounts page.
  */
-function openid_connect_connected_accounts_access($account) {
+function openid_connect_connected_accounts_access() {
   global $user;
   if (user_access('administer users')) {
     return TRUE;
   }
 
-  return $user->uid && $user->uid === $account->uid && user_access('manage own openid_connect accounts');
+  return $user->uid && $user->uid === arg(1) && user_access('manage own openid_connect accounts');
 }
 
 /**
  * Saves user profile information into a user account.
  */
 function openid_connect_save_userinfo($account, $userinfo) {
-  $account_wrapper = entity_metadata_wrapper('user', $account);
-  $properties = $account_wrapper->getPropertyInfo();
+//  $account_wrapper = entity_metadata_wrapper('user', $account);
+//  $properties = $account_wrapper->getPropertyInfo();
   $properties_skip = _openid_connect_user_properties_to_skip();
   foreach ($properties as $property_name => $property) {
     if (isset($properties_skip[$property_name])) {
@@ -308,10 +297,10 @@ function openid_connect_save_userinfo($account, $userinfo) {
     $account->data['oidc_name'] = $userinfo['name'];
   }
 
-  $account_wrapper->save();
+//  $account_wrapper->save();
 
   // Fetch and save user picture from the login provider.
-  if (variable_get('user_pictures') && variable_get('openid_connect_user_pictures', TRUE) && !empty($userinfo['picture'])) {
+  if (variable_get('user_pictures', FALSE) && variable_get('openid_connect_user_pictures', TRUE) && !empty($userinfo['picture'])) {
     openid_connect_save_user_picture($account, $userinfo['picture']);
   }
 }
@@ -325,10 +314,10 @@ function openid_connect_save_userinfo($account, $userinfo) {
  *   The URL to a user picture.
  */
 function openid_connect_save_user_picture($account, $picture_url) {
-  $picture_directory = file_default_scheme() . '://' . variable_get('user_picture_path', 'pictures');
-  if (!file_prepare_directory($picture_directory, FILE_CREATE_DIRECTORY)) {
-    return;
-  }
+//  $picture_directory = file_default_scheme() . '://' . variable_get('user_picture_path', 'pictures');
+//  if (!file_prepare_directory($picture_directory, FILE_CREATE_DIRECTORY)) {
+//    return;
+//  }
 
   $response = drupal_http_request($picture_url);
   if ($response->code != 200) {
@@ -342,13 +331,13 @@ function openid_connect_save_user_picture($account, $picture_url) {
     return;
   }
 
-  $picture_path = file_stream_wrapper_uri_normalize($picture_directory . '/picture-' . $account->uid . '-' . REQUEST_TIME . '.jpg');
+//  $picture_path = file_stream_wrapper_uri_normalize($picture_directory . '/picture-' . $account->uid . '-' . REQUEST_TIME . '.jpg');
   $picture_file = file_save_data($response->data, $picture_path, FILE_EXISTS_REPLACE);
 
   // Check to make sure the picture isn't too large for the site settings.
   // Suppress the status message that Drupal sets after a successful resizing.
   $status_messages = isset($_SESSION['messages']['status']) ? $_SESSION['messages']['status'] : NULL;
-  file_validate_image_resolution($picture_file, variable_get('user_picture_dimensions', '1024x1024'));
+//  file_validate_image_resolution($picture_file, variable_get('user_picture_dimensions', '1024x1024'));
   if (isset($status_messages)) {
     $_SESSION['messages']['status'] = $status_messages;
   }
@@ -371,6 +360,9 @@ function openid_connect_save_user_picture($account, $picture_url) {
  *   The path to redirect to after login.
  */
 function openid_connect_login_user($account, &$destination) {
+  // TODO: Look at this again for security implications.
+  global $user;
+  $user = user_load(array('uid' => $account->uid));
   $form_state['uid'] = $account->uid;
   $form = array();
 
@@ -399,8 +391,10 @@ function openid_connect_login_user($account, &$destination) {
  * Save the current path in the session, for redirecting after authorization.
  */
 function openid_connect_save_destination() {
-  $destination = drupal_get_destination();
-  $destination = $destination['destination'] == 'user/login' ? 'user' : $destination['destination'];
+  // TODO: drupal_get_destination() isn't exactly what we want here, but not
+  // sure if $_GET['q'] is the best way either.
+  $destination = $_GET['q'];
+  $destination = $destination == 'user/login' ? 'user' : $destination;
 
   // The destination could contain query parameters. Ensure that they are
   // preserved.
@@ -475,9 +469,7 @@ function openid_connect_generate_username($sub, $userinfo, $client_name) {
  *   TRUE if a user exists with the given name, FALSE otherwise.
  */
 function openid_connect_username_exists($name) {
-  return db_query('SELECT COUNT(*) FROM {users} WHERE name = :name', array(
-      ':name' => $name
-    ))->fetchField() > 0;
+  return db_result(db_query('SELECT COUNT(*) FROM {users} WHERE name = "%s"', $name)) > 0;
 }
 
 /**
@@ -504,10 +496,7 @@ function openid_connect_user_insert(&$edit, $account, $category) {
  * Deletes a user's authmap entries.
  */
 function openid_connect_authmap_delete($uid) {
-  db_delete('authmap')
-    ->condition('uid', $uid)
-    ->condition('module', db_like('openid_connect_') . '%', 'LIKE')
-    ->execute();
+  db_query('DELETE FROM {authmap} WHERE uid = %d AND module LIKE openid_connect_%', $uid);
 }
 
 /**
@@ -565,14 +554,10 @@ function openid_connect_set_password_access($account) {
  * Loads a user based on a sub-id and a login provider.
  */
 function openid_connect_user_load_by_sub($sub, $client_name) {
-  $result = db_select('authmap', 'a')
-          ->fields('a', array('uid', 'module'))
-          ->condition('authname', $sub)
-          ->condition('module', 'openid_connect_' . $client_name)
-          ->execute()
-          ->fetchAssoc();
+  $result = db_fetch_array(db_query('SELECT uid, module FROM {authmap} WHERE authname = "%s" AND module = "%s"', $sub, 'openid_connect_' . $client_name));
+
   if ($result) {
-    $account = user_load($result['uid']);
+    $account = user_load(array('uid' => $result['uid']));
     if (is_object($account)) {
       return $account;
     }
@@ -795,13 +780,10 @@ function openid_connect_connect_account($account, $client_name, $sub) {
  *   The 'sub' property identifying the external account (optional).
  */
 function openid_connect_disconnect_account($account, $client_name, $sub = NULL) {
-  $query = db_delete('authmap');
-  $query->condition('uid', $account->uid)
-    ->condition('module', 'openid_connect_' . $client_name);
   if ($sub !== NULL) {
-    $query->condition('authname', $sub);
+    return db_query('DELETE FROM {authmap} WHERE uid = %d AND module = "%s AND authmap = "%s"', $account->uid, 'openid_connect_' . $client_name, $sub);
   }
-  $query->execute();
+  return db_query('DELETE FROM {authmap} WHERE uid = %d AND module = "%s"', $account->uid, 'openid_connect_' . $client_name);
 }
 
 /**
@@ -849,10 +831,11 @@ function openid_connect_extract_sub($user_data, $userinfo) {
  *   TRUE on success, FALSE on failure.
  */
 function openid_connect_complete_authorization($client, $tokens, &$destination) {
-  if (user_is_logged_in()) {
-    // @FIXME: This isn't valid in PHP 5.2.
-    // throw new \RuntimeException('User already logged in');
-  }
+
+//  if (user_is_logged_in()) {
+//    // @FIXME: This isn't valid in PHP 5.2.
+//    // throw new \RuntimeException('User already logged in');
+//  }
 
   $user_data = $client->decodeIdToken($tokens['id_token']);
   $userinfo = $client->retrieveUserInfo($tokens['access_token']);
@@ -879,7 +862,7 @@ function openid_connect_complete_authorization($client, $tokens, &$destination) 
   }
   else {
     // Check whether there is an e-mail address conflict.
-    if (user_load_by_mail($userinfo['email'])) {
+    if (user_load(array('mail' => $userinfo['email']))) {
       drupal_set_message(t('The e-mail address is already taken: @email', array('@email' => $userinfo['email'])), 'error');
 
       return FALSE;
