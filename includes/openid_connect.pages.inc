@@ -48,7 +48,7 @@ function openid_connect_redirect_page($client_name) {
         '@error' => $_GET['error'],
         '@details' => $_GET['error_description'],
       );
-      watchdog('openid_connect_' . $client_name, 'Authorization failed: @error. Details: @details', $variables, WATCHDOG_ERROR);
+      watchdog('openid_connect_' . $client_name, t('Authorization failed: @error. Details: @details', $variables), WATCHDOG_ERROR);
     }
   }
   else {

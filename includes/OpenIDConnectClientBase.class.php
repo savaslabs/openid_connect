@@ -128,14 +128,17 @@ abstract class OpenIDConnectClientBase implements OpenIDConnectClientInterface {
     );
     $request_options = array(
       'method' => 'POST',
-      'data' => http_build_query($post_data),
+      'data' => drupal_query_string_encode($post_data),
       'timeout' => 15,
       'headers' => array('Content-Type' => 'application/x-www-form-urlencoded'),
     );
     $endpoints = $this->getEndpoints();
-    $response = drupal_http_request($endpoints['token'], $request_options);
+    $response = drupal_http_request($endpoints['token'],
+                $request_options['headers'],
+                $request_options['method'],
+                $request_options['data']);
     if (!isset($response->error) && $response->code == 200) {
-      $response_data = drupal_to_js($response->data);
+      $response_data = json_decode($response->data, TRUE);
       return array(
         'id_token' => $response_data['id_token'],
         'access_token' => $response_data['access_token'],
@@ -155,7 +158,7 @@ abstract class OpenIDConnectClientBase implements OpenIDConnectClientInterface {
     list($headerb64, $claims64, $signatureb64) = explode('.', $id_token);
     $claims64 = str_replace(array('-', '_'), array('+', '/'), $claims64);
     $claims64 = base64_decode($claims64);
-    return drupal_to_js($claims64);
+    return json_decode($claims64, TRUE);
   }
 
   /**
@@ -168,9 +171,9 @@ abstract class OpenIDConnectClientBase implements OpenIDConnectClientInterface {
       ),
     );
     $endpoints = $this->getEndpoints();
-    $response = drupal_http_request($endpoints['userinfo'], $request_options);
+    $response = drupal_http_request($endpoints['userinfo'], $request_options['headers']);
     if (!isset($response->error) && $response->code == 200) {
-      return drupal_to_js($response->data);
+      return json_decode($response->data, TRUE);
     }
     else {
       openid_connect_log_request_error(__FUNCTION__, $this->name, $response);
