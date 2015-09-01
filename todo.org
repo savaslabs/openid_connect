@@ -3,9 +3,9 @@
 Here's a list of things that need to get done.
 ** DONE Remove dependency on ctools
 ** DONE Convert permission hook
-** TODO Convert .install file
+** DONE Convert .install file
 ** DONE Convert hook_menu
 ** TODO Remove dependency on entity module
-** TODO Figure out what User Claims Mapping is all about
+** DONE Figure out what User Claims Mapping is all about
 ** TODO User profile photo saving with user account
 ** DONE Block implementation for auth
