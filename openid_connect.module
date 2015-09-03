@@ -672,7 +672,7 @@ function openid_connect_claims() {
  * Returns OpenID Connect standard Claims as a Form API options array.
  */
 function openid_connect_claims_options() {
-  $options = array();
+  $options = array('' => t('- No mapping -'));
   foreach (openid_connect_claims() as $claim_name => $claim) {
     $options[$claim['scope']][$claim_name] = $claim_name;
   }
