@@ -9,3 +9,8 @@ Here's a list of things that need to get done.
 ** DONE Figure out what User Claims Mapping is all about
 ** TODO User profile photo saving with user account
 ** DONE Block implementation for auth
+
+* Major changes
+
+** hook_username_alter() doesn't exist
+** tfa doesn't exist
