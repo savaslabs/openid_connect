@@ -925,8 +925,7 @@ function openid_connect_complete_authorization($client, $tokens, &$destination) 
 function openid_connect_connect_current_user($client, $tokens) {
   global $user;
   if (!$user->uid) {
-    // @FIXME: This isn't valid in PHP 5.2.
-    // throw new \RuntimeException('User not logged in');
+    throw new RuntimeException('User not logged in');
   }
 
   $user_data = $client->decodeIdToken($tokens['id_token']);
