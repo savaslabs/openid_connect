@@ -740,7 +740,7 @@ function openid_connect_log_request_error($method, $client_name, $response) {
     '@code' => $response->code,
     '@details' => $details,
   );
-  watchdog('openid_connect_' . $client_name, $message . ' (@code @error). Details: @details', $variables, WATCHDOG_ERROR);
+  watchdog('openid_connect_' . $client_name, t($message . ' (@code @error). Details: @details', $variables), WATCHDOG_ERROR);
 }
 
 /**
@@ -874,14 +874,14 @@ function openid_connect_complete_authorization($client, $tokens, &$destination) 
   $userinfo = $client->retrieveUserInfo($tokens['access_token']);
 
   if ($userinfo && empty($userinfo['email'])) {
-    watchdog('openid_connect', 'No e-mail address provided by @provider', array('@provider' => $client->getLabel()), WATCHDOG_ERROR);
+    watchdog('openid_connect', t('No e-mail address provided by @provider', array('@provider' => $client->getLabel())), WATCHDOG_ERROR);
 
     return FALSE;
   }
 
   $sub = openid_connect_extract_sub($user_data, $userinfo);
   if (empty($sub)) {
-    watchdog('openid_connect', 'No "sub" found from @provider', array('@provider' => $client->getLabel()), WATCHDOG_ERROR);
+    watchdog('openid_connect', t('No "sub" found from @provider', array('@provider' => $client->getLabel())), WATCHDOG_ERROR);
 
     return FALSE;
   }
@@ -936,14 +936,14 @@ function openid_connect_connect_current_user($client, $tokens) {
   $provider_param = array('@provider' => $client->getLabel());
 
   if ($userinfo && empty($userinfo['email'])) {
-    watchdog('openid_connect', 'No e-mail address provided by @provider', $provider_param, WATCHDOG_ERROR);
+    watchdog('openid_connect', t('No e-mail address provided by @provider', $provider_param), WATCHDOG_ERROR);
 
     return FALSE;
   }
 
   $sub = openid_connect_extract_sub($user_data, $userinfo);
   if (empty($sub)) {
-    watchdog('openid_connect', 'No "sub" found from @provider', $provider_param, WATCHDOG_ERROR);
+    watchdog('openid_connect', t('No "sub" found from @provider', $provider_param), WATCHDOG_ERROR);
 
     return FALSE;
   }
