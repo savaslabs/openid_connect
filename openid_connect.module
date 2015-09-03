@@ -662,8 +662,8 @@ function openid_connect_claims() {
       'scope' => 'phone',
     ),
   );
-  // TODO: Fix this.
-  //  drupal_alter(__FUNCTION__, $claims);
+
+  module_invoke_all('openid_connect_claims_alter', $claims);
   return $claims;
 }
 
