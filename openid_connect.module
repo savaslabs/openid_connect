@@ -333,7 +333,7 @@ function openid_connect_save_userinfo($account, $userinfo) {
   // Save the display name additionally in the user account 'data', for use in
   // openid_connect_username_alter().
   if (isset($userinfo['name'])) {
-    $account->data['oidc_name'] = $userinfo['name'];
+    $edit['oidc_name'] = $userinfo['name'];
   }
 
   user_save($account, $edit);
@@ -372,16 +372,18 @@ function openid_connect_save_user_picture($account, $picture_url) {
 
   $picture_suffix = substr($response->headers['Content-Type'], strpos($response->headers['Content-Type'], '/') + 1);
   $picture_path = $picture_directory . '/picture-' . $account->uid . '-' . $_SERVER['REQUEST_TIME'] . '.' . $picture_suffix;
-  $file = file_save_upload(file_get_contents($picture_url), $picture_path, 1);
-  if (!$file) {
+  $filepath = file_save_data(file_get_contents($picture_url), $picture_path, FILE_EXISTS_REPLACE);
+  if (!$filepath) {
     return;
   }
 
   // Check to make sure the picture isn't too large for the site settings.
   // Suppress the status message that Drupal sets after a successful resizing.
   $status_messages = isset($_SESSION['messages']['status']) ? $_SESSION['messages']['status'] : NULL;
-  //  file_validate_image_resolution($picture_file, variable_get('user_picture_dimensions', '1024x1024'));
-//  user_validate_picture($picture_file, $edit, $account);
+  // In the D7 version, we call file_validate_image_resolution() which doesn't
+  // exist in D5. Instead, let's copy some bits from user_validate_picture().
+  list($maxwidth, $maxheight) = explode('x', variable_get('user_picture_dimensions', '85x85'));
+  image_scale($filepath, $filepath, $maxwidth, $maxheight);
   if (isset($status_messages)) {
     $_SESSION['messages']['status'] = $status_messages;
   }
@@ -390,10 +392,9 @@ function openid_connect_save_user_picture($account, $picture_url) {
   }
 
   // Update the user account object.
-  $edit['picture'] = $file->filepath;
-//  $edit['data']['oidc_picture_hash'] = $hash;
-  $account->picture_delete = 1;
-  $account->picture_upload = NULL;
+  $edit['picture'] = $filepath;
+  $edit['oidc_picture_hash'] = $hash;
+
   user_save($account, $edit);
 }
 
