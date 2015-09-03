@@ -544,22 +544,16 @@ function openid_connect_authmap_delete($uid) {
 }
 
 /**
- * Implements hook_form_FORM_ID_alter().
- *
- * TODO: Needs port.
+ * Implements hook_form_alter().
  */
-function openid_connect_form_user_profile_form_alter(&$form, &$form_state) {
-  if (isset($form['account'])) {
-    $account_form = &$form['account'];
-  }
-  else {
-    $account_form = &$form;
-  }
-
-  if (!empty($account_form['pass']['#access']) && !openid_connect_set_password_access($form['#user'])) {
-    $account_form['current_pass']['#access'] = FALSE;
-    $account_form['current_pass_required_values']['#value'] = array();
-    $account_form['pass']['#access'] = FALSE;
+function openid_connect_form_alter($form_id, &$form) {
+  if ($form_id == 'user_edit') {
+    if (isset($form['account']['pass'])) {
+      $account_form = &$form['account'];
+      if (!empty($account_form['pass']) && !openid_connect_set_password_access($form['_account']['#value'])) {
+        $account_form['pass']['#access'] = FALSE;
+      }
+    }
   }
 }
 
