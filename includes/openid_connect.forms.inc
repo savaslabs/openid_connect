@@ -28,8 +28,17 @@ function openid_connect_login_form() {
  */
 function openid_connect_login_form_submit($form_id, $form_values) {
   openid_connect_save_destination();
-  // TODO: See if there is a better way besides $_POST
-  $client_name = array_shift(array_keys($_POST));
+  // N.B. This is ugly, but not sure if there's a better way.
+  $client_name = '';
+  foreach ($form_values as $key => $value) {
+    if (strpos($key, 'openid_connect_client_') === 0) {
+      continue;
+    }
+    if ($key == 'form_id') {
+      continue;
+    }
+    $client_name = $key;
+  }
   $client = openid_connect_get_client($client_name);
   $scopes = openid_connect_get_scopes();
   $_SESSION['openid_connect_op'] = 'login';
