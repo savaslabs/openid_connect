@@ -863,11 +863,10 @@ function openid_connect_extract_sub($user_data, $userinfo) {
  *   TRUE on success, FALSE on failure.
  */
 function openid_connect_complete_authorization($client, $tokens, &$destination) {
-
-//  if (user_is_logged_in()) {
-//    // @FIXME: This isn't valid in PHP 5.2.
-//    // throw new \RuntimeException('User already logged in');
-//  }
+  global $user;
+  if ($user->uid) {
+    throw new RuntimeException('User already logged in');
+  }
 
   $user_data = $client->decodeIdToken($tokens['id_token']);
   $userinfo = $client->retrieveUserInfo($tokens['access_token']);
