@@ -412,7 +412,8 @@ function openid_connect_login_user($account, &$destination) {
   $form_state['uid'] = $account->uid;
   $form = array();
 
-  // TFA integration.
+  // TFA integration. Seems unlikely to be backported to Drupal 5, but left
+  // here for posterity.
   if (module_exists('tfa')) {
     // The 'code' and 'state' parameters have now been used.
     unset($_GET['code'], $_GET['state']);
