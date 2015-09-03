@@ -372,7 +372,7 @@ function openid_connect_save_user_picture($account, $picture_url) {
 
   $picture_suffix = substr($response->headers['Content-Type'], strpos($response->headers['Content-Type'], '/') + 1);
   $picture_path = $picture_directory . '/picture-' . $account->uid . '-' . $_SERVER['REQUEST_TIME'] . '.' . $picture_suffix;
-  $filepath = file_save_data(file_get_contents($picture_url), $picture_path, FILE_EXISTS_REPLACE);
+  $filepath = file_save_data($response->data, $picture_path, FILE_EXISTS_REPLACE);
   if (!$filepath) {
     return;
   }
