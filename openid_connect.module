@@ -733,7 +733,7 @@ function openid_connect_log_request_error($method, $client_name, $response) {
   // Some error responses don't have a data key set.
   $details = '';
   if (!empty($response->data)) {
-    $details = print_r(drupal_to_js($response->data), TRUE);
+    $details = print_r(json_decode($response->data), TRUE);
   }
   $variables = array(
     '@error' => $response->error,
