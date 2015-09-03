@@ -746,6 +746,8 @@ function openid_connect_log_request_error($method, $client_name, $response) {
 /**
  * Implements hook_entity_property_info_alter().
  *
+ * TODO: This hook doesn't exist in Drupal 5.
+ *
  * Adds the missing timezone property.
  */
 function openid_connect_entity_property_info_alter(&$info) {
