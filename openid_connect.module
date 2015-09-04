@@ -306,27 +306,16 @@ function openid_connect_connected_accounts_access() {
  */
 function openid_connect_save_userinfo($account, $userinfo) {
   $edit = array();
-  if (module_exists('profile')) {
-    $properties = array();
-    $profile_categories = profile_categories();
-    // We don't have niceties like $account_wrapper->getPropertyInfo(), so use
-    // profile module's categories instead.
-    foreach ($profile_categories as $category) {
-      $profile_get_fields = _profile_get_fields($category['name']);
-      while ($field = db_fetch_object(($profile_get_fields))) {
-        $properties[$field->name] = $field;
-      }
-    }
 
-    $properties_skip = _openid_connect_user_properties_to_skip();
-    foreach ($properties as $property_name => $property) {
-      if (isset($properties_skip[$property_name])) {
-        continue;
-      }
-      $claim = variable_get('openid_connect_userinfo_mapping_property_' . $property_name, NULL);
-      if ($claim && isset($userinfo[$claim])) {
-        $edit[$property_name] = $userinfo[$claim];
-      }
+  $properties = openid_connect_properties();
+  $properties_skip = _openid_connect_user_properties_to_skip();
+  foreach ($properties as $property_name => $property) {
+    if (isset($properties_skip[$property_name])) {
+      continue;
+    }
+    $claim = variable_get('openid_connect_mapping_property_' . $property_name, NULL);
+    if ($claim && isset($userinfo[$claim])) {
+      $edit[$property_name] = $userinfo[$claim];
     }
   }
 
@@ -972,4 +961,76 @@ function openid_connect_connect_current_user($client, $tokens) {
   module_invoke_all('openid_connect_post_authorize', $tokens, $account, $userinfo, $client->getName());
 
   return TRUE;
+}
+
+/**
+ * A list of properties on the user object and profile.
+ *
+ * @return array
+ *   A list of properties
+ */
+function openid_connect_properties() {
+  return array_merge(array(
+    'uid' => array(
+      'label' => t('User ID'),
+      'description' => t('The unique ID of the user account.'),
+    ),
+    'name' => array(
+      'label' => t('Name'),
+      'description' => t('The login name of the user account.'),
+    ),
+    'mail' => array(
+      'label' => t('Email'),
+      'description' => t('The email address of the user account.'),
+    ),
+    'access' => array(
+      'label' => t('Last access'),
+      'description' => t('The date the user last accessed the site.'),
+    ),
+    'login' => array(
+      'label' => t('Last login'),
+      'description' => t('The date the user last logged in to the site.'),
+    ),
+    'created' => array(
+      'label' => t('Created'),
+      'description' => t('The date the user account was created.'),
+    ),
+    'roles' => array(
+      'label' => t('User roles'),
+      'description' => t('The roles of the user.'),
+    ),
+    'status' => array(
+      'label' => t('Status'),
+      'description' => t('Whether the user is active or blocked.'),
+    ),
+    'theme' => array(
+      'label' => t('Default theme'),
+      'description' => t("The user's default theme."),
+    ),
+    'timezone' => array(
+      'label' => t('Time zone'),
+      'description' => t("The user's time zone."),
+    ),
+  ),
+    _openid_connect_profile_properties()
+  );
+}
+
+function _openid_connect_profile_properties() {
+  $properties = array();
+  if (module_exists('profile')) {
+    $profile_categories = profile_categories();
+    // We don't have niceties like $account_wrapper->getPropertyInfo(), so use
+    // profile module's categories instead.
+    foreach ($profile_categories as $category) {
+      $profile_get_fields = _profile_get_fields($category['name']);
+      while ($field = db_fetch_object(($profile_get_fields))) {
+        $properties[$field->name] = array(
+          'label' => $field->title,
+          'description' => $field->explanation
+        );
+      }
+    }
+  }
+  return $properties;
 }

@@ -53,12 +53,9 @@ function openid_connect_admin_form() {
     '#type' => 'fieldset',
   );
 
-  // @TODO: Ain't no such thing in D5!
-  // $user_entity_wrapper = entity_metadata_wrapper('user');
   $claims = openid_connect_claims_options();
-  //  $properties = $user_entity_wrapper->getPropertyInfo();
   $properties_skip = _openid_connect_user_properties_to_skip();
-  $properties = array();
+  $properties = openid_connect_properties();
   foreach ($properties as $property_name => $property) {
     if (isset($properties_skip[$property_name])) {
       continue;
@@ -69,14 +66,14 @@ function openid_connect_admin_form() {
       $default_value = 'zoneinfo';
     }
 
-    $form['userinfo_mapping']['openid_connect_userinfo_mapping_property_' . $property_name] = array(
+    $form['userinfo_mapping']['openid_connect_mapping_property_' . $property_name] = array(
       '#type' => 'select',
       '#title' => $property['label'],
       '#description' => $property['description'],
       '#options' => $claims,
       '#empty_value' => 0,
       '#empty_option' => t('- No mapping -'),
-      '#default_value' => variable_get('openid_connect_userinfo_mapping_property_' . $property_name, $default_value),
+      '#default_value' => variable_get('openid_connect_mapping_property_' . $property_name, $default_value),
     );
   }
 
