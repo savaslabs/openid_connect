@@ -738,27 +738,6 @@ function openid_connect_log_request_error($method, $client_name, $response) {
 }
 
 /**
- * Implements hook_entity_property_info_alter().
- *
- * TODO: This hook doesn't exist in Drupal 5.
- *
- * Adds the missing timezone property.
- */
-function openid_connect_entity_property_info_alter(&$info) {
-  $properties = &$info['user']['properties'];
-  if (!isset($properties['timezone'])) {
-    $properties['timezone'] = array(
-      'label' => t('Time zone'),
-      'description' => t("The user's time zone."),
-      'options list' => 'system_time_zones',
-      'getter callback' => 'entity_property_verbatim_get',
-      'setter callback' => 'entity_property_verbatim_set',
-      'schema field' => 'timezone',
-    );
-  }
-}
-
-/**
  * Get a list of external OIDC accounts connected to this Drupal account.
  *
  * @param object $account
