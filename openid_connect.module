@@ -959,12 +959,20 @@ function openid_connect_properties() {
   );
 }
 
+/**
+ * Helper function to return Profile module field properties.
+ *
+ * In D5 we don't have niceties like $account_wrapper->getPropertyInfo(), so
+ * use profile module's categories instead.
+ *
+ * @return array
+ *   Return array of profile field properties including the label and
+ *   description.
+ */
 function _openid_connect_profile_properties() {
   $properties = array();
   if (module_exists('profile')) {
     $profile_categories = profile_categories();
-    // We don't have niceties like $account_wrapper->getPropertyInfo(), so use
-    // profile module's categories instead.
     foreach ($profile_categories as $category) {
       $profile_get_fields = _profile_get_fields($category['name']);
       while ($field = db_fetch_object(($profile_get_fields))) {
