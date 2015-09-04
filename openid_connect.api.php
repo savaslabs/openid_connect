@@ -41,5 +41,21 @@ function hook_openid_connect_claims_alter(array &$claims) {
 }
 
 /**
+ * Define plugins for OpenID Connect providers.
+ *
+ * @see openid_connect_openid_connect_plugins();
+ */
+function hook_openid_connect_plugins() {
+  return array(
+    'yourservice' => array(
+      'title' => t('Your Service'),
+      'class' => 'OpenIDConnectClientYourService',
+      'file' => 'OpenIDConnectClientYourService.class.php',
+      'module' => 'your_module',
+    ),
+  );
+}
+
+/**
  * @} End of "addtogroup hooks".
  */
