@@ -10,5 +10,5 @@
  */
 function openid_connect_uninstall() {
   db_query('DELETE FROM {variable} WHERE name LIKE "openid_connect%"');
-  cache_clear_all('variables', 'cache_bootstrap');
+  cache_clear_all('variables', 'cache');
 }
