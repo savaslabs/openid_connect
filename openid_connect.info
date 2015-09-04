@@ -1,4 +1,3 @@
 name = OpenID Connect
 description = A pluggable client implementation for the OpenID Connect protocol.
 package = "OAuth2"
-version = 5.x-1.x
