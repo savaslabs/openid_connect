@@ -75,7 +75,10 @@ function openid_connect_redirect_page($client_name) {
 
   // It's possible to set 'options' in the redirect destination.
   if (is_array($destination)) {
-    drupal_goto($destination[0], $destination[1]);
+    if (isset($destination[1]['query']) && !empty($destination[1]['query'])) {
+      drupal_goto($destination[0], $destination[1]['query']);
+    }
+    drupal_goto($destination[0]);
   }
   else {
     drupal_goto($destination);
