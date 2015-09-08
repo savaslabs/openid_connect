@@ -494,7 +494,7 @@ function openid_connect_user($op, &$edit, &$account, $category = NULL) {
  * Deletes a user's authmap entries.
  */
 function openid_connect_authmap_delete($uid) {
-  db_query('DELETE FROM {authmap} WHERE uid = %d AND module LIKE openid_connect_%', $uid);
+  db_query('DELETE FROM {authmap} WHERE uid = %d AND module LIKE "openid_connect_%"', $uid);
 }
 
 /**
