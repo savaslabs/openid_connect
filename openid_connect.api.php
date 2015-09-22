@@ -11,6 +11,34 @@
  */
 
 /**
+ * Specify if a new user may be created via OpenID Connect.
+ *
+ * @param array $userinfo
+ *   An array containing user data from the external authentication service. An
+ *   example array may look like:
+ *   $userinfo = array(
+ *     'kind' => 'plus#personOpenIdConnect',
+ *     'sub' => '10610823446148356481571'
+ *     'name' => 'Some One'
+ *     'email' => 'some@one.com',
+ *   );
+ * @param string $client_info
+ *  The name of the OpenID Connect Client being used, e.g. 'google'.
+ *
+ * @return bool
+ *   Return TRUE if user creation may proceed, FALSE otherwise. You may also use
+ *   `drupal_set_message()` to present a message to the user as to why their
+ *   account was not created.
+ */
+function hook_openid_connect_allow_user_create($userinfo, $client_name) {
+  if ($userinfo['name'] == 'Some One') {
+    drupal_set_message('Sorry, Some One is not allowed on this site.', 'error');
+    return FALSE;
+  }
+  return TRUE;
+}
+
+/**
  * Perform an action after a successful authorization.
  *
  * @param array $tokens
