@@ -458,6 +458,11 @@ function openid_connect_generate_username($sub, $userinfo, $client_name) {
     $name = $original . '_' . $i;
   }
 
+  // N.B. we are trusting third-party modules to ensure uniqueness in the username.
+  if ($ret = module_invoke_all('openid_connect_username_alter', $name, $userinfo, $client_name)) {
+    // Module with the lowest weight wins.
+    $name = array_shift($ret);
+  }
   return $name;
 }
 
@@ -839,6 +844,12 @@ function openid_connect_complete_authorization($client, $tokens, &$destination) 
     }
 
     // Create a new account.
+    $ret = module_invoke_all('openid_connect_allow_user_create', $userinfo, $client->getName());
+    foreach ($ret as $hook_response) {
+      if ($hook_response == FALSE) {
+        return FALSE;
+      }
+    }
     $account = openid_connect_create_user($sub, $userinfo, $client->getName());
     openid_connect_save_userinfo($account, $userinfo);
   }
